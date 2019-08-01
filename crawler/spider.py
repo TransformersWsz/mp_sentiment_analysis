@@ -21,14 +21,23 @@ class CrawlGood(object):
             print(item)
         print("============================")
 
+    def total_comment(self, star, comment_content, order_info):
+        """获取一个完整的评论"""
+        info = "\t".join(order_info)
+        complete_comment = "{}--->{}--->{}".format(star, info, comment_content)
+        return complete_comment
+
     def run(self):
         driver = webdriver.Chrome()
         driver.maximize_window()
         driver.get(self._href)
 
-
         ul = driver.find_element_by_css_selector(".parameter2.p-parameter-list")
         good_name = ul.find_element_by_tag_name("li").text[5:]
+
+        driver.save_screenshot("{}.png".format(good_name))    # 获取屏幕截图
+        print("{}.png已截图".format(good_name))
+
         etab = driver.find_elements_by_css_selector(".tab-main.large")[-1]
         etab.find_elements_by_tag_name("li")[1].click()
         details = driver.find_elements_by_css_selector(".Ptable-item")  # 获取商品参数
@@ -101,7 +110,12 @@ class CrawlGood(object):
                                                                                                 thunderport))
 
         time.sleep(before_get_element_time)
-        etab.find_elements_by_tag_name("li")[4].click()
+
+        for li in etab.find_elements_by_tag_name("li"):
+            if "商品评价" in li.text:
+                li.click()
+                break
+
         nums = 0  # 已爬取的评论数量
         comment_list = []
         while nums < num_comment_to_crawl:
@@ -110,11 +124,24 @@ class CrawlGood(object):
                     lambda driver: len(driver.find_elements_by_css_selector(".comment-item")) >= 10)
                 time.sleep(before_get_element_time)
                 comment_items = driver.find_elements_by_css_selector(".comment-item")  # 获取商品评论
-                temporary = []
+                temporary = []    # 一页10条评论
                 for item in comment_items:
+                    ccjcc = item.find_element_by_css_selector(".comment-column.J-comment-column")
+                    star = ccjcc.find_element_by_tag_name("div")
+                    star = int(star.get_attribute(name="class")[-1])    # 获取打星数
+
+                    message = ccjcc.find_element_by_css_selector(".order-info")
+                    spans = message.find_elements_by_tag_name("span")
+                    order_info = []
+                    for span_item in spans:
+                        order_info.append(span_item.text)    # 获取评论手机的参数
+
                     comment_content = item.find_element_by_css_selector(".comment-con").text
-                    comment_content = comment_content.replace("\n", "")
-                    temporary.append(comment_content)
+                    comment_content = comment_content.replace("\n", "")    # 获取评论的文字内容
+
+                    complete_comment = self.total_comment(star, comment_content, order_info)    # 获取到一条完整的评论信息
+
+                    temporary.append(complete_comment)
                     nums += 1
 
                     if nums >= num_comment_to_crawl:
@@ -136,13 +163,17 @@ class CrawlGood(object):
                 else:
                     driver.refresh()
                     time.sleep(before_get_element_time)
-                    driver.find_elements_by_css_selector(".tab-main.large")[-1].find_elements_by_tag_name("li")[4].click()
+
+                    for li in driver.find_elements_by_css_selector(".tab-main.large")[-1].find_elements_by_tag_name("li"):
+                        if "商品评价" in li.text:
+                            li.click()
+                            break
             finally:
                 pass
 
         print("({} {}) 爬取结束 ----------------------------------------".format(self._title, self._href))
         with open("{}.txt".format(good_name), "w", encoding="utf-8") as fw:
-            fw.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(good_name, color,
+            fw.write("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n\n".format(good_name, color,
                                                                                                        length, width,
                                                                                                        thickness,
                                                                                                        weight, cards,
