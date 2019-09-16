@@ -17,8 +17,10 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("phone/", include("phone.urls"))
 ]
+
+# handler500 = "phone.views.page_error"
+# handler404 = "phone.views.page_not_found"
