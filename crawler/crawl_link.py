@@ -7,7 +7,7 @@ def get_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
-    file_handler = logging.FileHandler("crawler.log", mode="w")    # 日志输出到文件
+    file_handler = logging.FileHandler("crawler.log", mode="a")    # 日志输出到文件
     file_handler.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()    # 日志输出到控制台

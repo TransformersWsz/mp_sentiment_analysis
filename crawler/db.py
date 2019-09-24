@@ -1,3 +1,6 @@
+"""将文件数据存储到数据库中"""
+
+
 import pymysql
 import os
 
